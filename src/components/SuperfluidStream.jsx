@@ -12,6 +12,11 @@ import createNewFlow from './../superfluidFunctions/createStream';
 import updateExistingFlow from './../superfluidFunctions/updateStream';
 import deleteFlow from './../superfluidFunctions/deleteStream';
 import "./../SuperfluidStream.css";
+import abi from './../utils/SuperApp.json';
+
+const contractABI = abi.abi; // update this if using new contract
+const contractAddress = '0xB8879D32532FEc39df52D24d131B014bD9aFdd1c'; // update this if using new contract
+const DAIxAddress = '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f';
 
 const SuperfluidStream = () => {
     const [recipient, setRecipient] = useState("");
@@ -57,6 +62,33 @@ const SuperfluidStream = () => {
             console.log("No authorized account found");
         }
     };
+
+    const unwrapDAIx = async () => {
+        try {
+            const { ethereum } = window;
+            if (!ethereum) {
+                alert('Get metamask');
+            }
+
+            const provider = new ethers.providers.Web3Provider(ethereum);
+            const signer = provider.getSigner();
+            // IMPORTANT: If using your own contract, make sure to update the contract address and abi 
+            const superApp = new ethers.Contract(
+                contractAddress,
+                contractABI,
+                signer
+            );
+    
+            const unwrapTxn = await superApp.unwrap(DAIxAddress);
+            console.log('Unwrapping DAIx');
+            await unwrapTxn.wait();
+            console.log('Transaction complete');
+
+        } catch (error) {
+            console.log('Error unwrapping DAIx', error);
+        }
+
+    }
 
     useEffect(() => {
         checkIfWalletIsConnected();
@@ -134,6 +166,13 @@ const SuperfluidStream = () => {
                     )}...${currentAccount.substring(38)}`}
                 </Card>
             )}
+
+            <button
+                className="button"
+                onClick={unwrapDAIx}
+            >
+                unwrapDAIx
+            </button>
 
             <h2>Create a flow</h2>
             <p>
